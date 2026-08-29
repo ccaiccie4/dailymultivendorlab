@@ -23,13 +23,15 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-          import markdown
+          import markdown, re
 
           src = Path('reports/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.md')
           dst = Path('docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html')
           md = src.read_text(encoding='utf-8')
-          if md.count('### Question ') != 50:
-              raise SystemExit(f'Expected 50 questions, found {md.count("### Question ")}')
+          exam = md.split('# 50-Question Cumulative Exam', 1)[1]
+          qcount = len(re.findall(r'^###\s+\d+\.', exam, re.M))
+          if qcount != 50:
+              raise SystemExit(f'Expected 50 questions, found {qcount}')
 
           body = markdown.markdown(md, extensions=['extra','tables','fenced_code'])
           css = '''
@@ -43,10 +45,10 @@ jobs:
           @media print{body{background:white}main{max-width:none;padding:0}h1{background:white;color:black;padding:0}details{break-inside:avoid}}
           '''
           html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daily Multivendor Routing Lab — 2026-08-29-08-11</title><style>{css}</style></head><body><main>{body}</main></body></html>'''
-          if '2026-08-29-08-11' not in html or 'Daily Multivendor Routing Lab' not in html:
+          if '2026-08-29-08-11' not in html or 'Daily Multivendor Routing Lab' not in html or '50-Question Cumulative Exam' not in html:
               raise SystemExit('Static HTML validation failed')
           dst.write_text(html, encoding='utf-8')
-          print(f'Built plain static HTML: {len(html)} chars')
+          print(f'Built plain static HTML: {len(html)} chars; questions={qcount}')
       - name: Commit static HTML
         run: |
           if git diff --quiet -- docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html; then
