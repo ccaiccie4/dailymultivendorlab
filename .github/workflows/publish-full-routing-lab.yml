@@ -1,0 +1,72 @@
+name: Publish Full Interactive Routing Lab HTML
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-full-routing-lab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct and validate canonical HTML
+        shell: python
+        run: |
+          from pathlib import Path
+          import base64, gzip, hashlib
+
+          parts = [Path(f'.github/payload/full-html.part{i}').read_text().strip() for i in range(1,5)]
+          packed = base64.b64decode(''.join(parts))
+          raw = gzip.decompress(packed)
+          expected = '88700d821014c62429d117bcd4b902fb3f34dd1f72e1eb877116c3489fdb5ae3'
+          actual = hashlib.sha256(raw).hexdigest()
+          if actual != expected:
+              raise SystemExit(f'SHA mismatch: {actual} != {expected}')
+          html = raw.decode('utf-8')
+          checks = {
+              'timestamp': '2026-08-29-08-11' in html,
+              'lessons': html.count('class="lesson"') == 21,
+              'questions': html.count('Check Answer</button>') == 50,
+              'grading': 'Submit / Grade Exam' in html,
+              'image links': 'Original image URL' in html,
+              'source links': html.count('<a href=') >= 60,
+              'plain html': 'DecompressionStream' not in html and 'Unable to unpack workbook' not in html,
+          }
+          bad = [k for k,v in checks.items() if not v]
+          if bad:
+              raise SystemExit('Validation failed: ' + ', '.join(bad))
+          dest = Path('docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html')
+          dest.write_bytes(raw)
+          print(f'Canonical HTML written: {len(raw)} bytes, SHA-256 {actual}')
+
+      - name: Update homepage latest report card
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('docs/index.html')
+          existing = p.read_text(encoding='utf-8') if p.exists() else ''
+          report = 'Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html'
+          if '<!doctype html' not in existing.lower():
+              existing = '''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daily Multivendor Routing Lab</title><style>body{font:16px/1.6 Inter,Segoe UI,Arial,sans-serif;background:#eef2f6;color:#17212b;margin:0}main{max-width:1000px;margin:auto;padding:24px}.card{background:white;border:1px solid #d5dee7;border-radius:14px;padding:22px;margin:16px 0}a.button{display:inline-block;background:#075f9f;color:white;text-decoration:none;padding:10px 16px;border-radius:9px}li{margin:6px 0}</style></head><body><main><h1>Daily Multivendor Routing Lab</h1><div id="latest"></div></main></body></html>'''
+          card = f'''<section class="card"><h2>Latest report — 2026-08-29-08-11</h2><p><b>What is covered today</b></p><ul><li>Hierarchical eBGP EVPN and recursive VTEP next-hop reachability</li><li>EVPN all-active multihoming and configuration-consistency blackholes</li><li>FortiGate BGP multipath, SD-WAN steering and Performance SLA</li><li>PAN-OS Advanced Routing Engine redistribution versus peer export policy</li><li>Arista EVPN Type-5 DCI, BUM/floodset behavior and RIB/FIB separation</li><li>Aruba/HPE VSX logical VTEP and OSPF redistribution</li><li>Juniper IPv6 EVPN underlay, routing on IRB and Type-5 scaling</li><li>FRRouting Linux EVPN state, OSPF externals and IS-IS Segment Routing</li><li>50-question cumulative interactive exam with per-question Check Answer and final grading</li></ul><p><a class="button" href="{report}">Open the full interactive HTML lab</a></p></section>'''
+          if '<div id="latest"></div>' in existing:
+              existing = existing.replace('<div id="latest"></div>', f'<div id="latest">{card}</div>')
+          elif 'Latest report — 2026-08-29-08-11' not in existing:
+              existing = existing.replace('</main>', card + '</main>')
+          p.write_text(existing, encoding='utf-8')
+
+      - name: Commit canonical Pages artifact and clean transport files
+        run: |
+          rm -rf .github/payload
+          rm -f .github/workflows/publish-full-routing-lab.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Publish full interactive routing lab 2026-08-29-08-11"
+          git push
