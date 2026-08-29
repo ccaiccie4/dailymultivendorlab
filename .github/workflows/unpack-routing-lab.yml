@@ -1,39 +1,53 @@
-name: Unpack Routing Lab HTML
+name: Build Static Routing Lab HTML
 
 on:
   push:
     branches: [main]
     paths:
-      - 'docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html'
       - '.github/workflows/unpack-routing-lab.yml'
+      - 'reports/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.md'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  unpack:
+  build:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Replace wrapper with plain HTML
+      - name: Install Markdown renderer
+        run: python -m pip install markdown
+      - name: Build plain static HTML from validated Markdown
         shell: python
         run: |
           from pathlib import Path
-          import re, base64, gzip
-          p = Path('docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html')
-          s = p.read_text(encoding='utf-8')
-          m = re.search(r'const b=`([^`]+)`', s, re.S)
-          if not m:
-              print('Already plain HTML; nothing to do.')
-              raise SystemExit(0)
-          raw = gzip.decompress(base64.b64decode(m.group(1))).decode('utf-8')
-          if '50-Question Cumulative' not in raw or raw.count('Check Answer</button>') != 50:
-              raise SystemExit('Decoded workbook failed validation')
-          p.write_text(raw, encoding='utf-8')
-          print(f'Wrote plain HTML: {len(raw)} chars')
-      - name: Commit plain HTML
+          import markdown
+
+          src = Path('reports/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.md')
+          dst = Path('docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html')
+          md = src.read_text(encoding='utf-8')
+          if md.count('### Question ') != 50:
+              raise SystemExit(f'Expected 50 questions, found {md.count("### Question ")}')
+
+          body = markdown.markdown(md, extensions=['extra','tables','fenced_code'])
+          css = '''
+          :root{--bg:#eef3f7;--card:#fff;--ink:#17212b;--muted:#607080;--line:#d6dfe8;--accent:#0969a7;--nav:#102a43;--soft:#eef7ff}
+          *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,Segoe UI,Arial,sans-serif}
+          main{max-width:1180px;margin:auto;padding:24px}h1{background:var(--nav);color:white;padding:28px;border-radius:16px;margin-top:0}h2{margin-top:38px;border-bottom:2px solid var(--line);padding-bottom:8px}h3{margin-top:28px}
+          p,li,td,th{overflow-wrap:anywhere}a{color:var(--accent)}blockquote{background:var(--soft);border-left:5px solid var(--accent);margin:16px 0;padding:12px 16px;border-radius:8px}
+          table{width:100%;border-collapse:collapse;background:white;margin:14px 0}th,td{border:1px solid var(--line);padding:9px;text-align:left;vertical-align:top}pre{background:#f7f9fb;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;white-space:pre-wrap}code{overflow-wrap:anywhere}
+          details{background:white;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0}summary{cursor:pointer;font-weight:700}img{max-width:100%;height:auto;background:white;padding:10px;border-radius:8px}
+          @media(max-width:720px){main{padding:10px}h1{font-size:25px;padding:20px}th,td{padding:7px}}
+          @media print{body{background:white}main{max-width:none;padding:0}h1{background:white;color:black;padding:0}details{break-inside:avoid}}
+          '''
+          html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daily Multivendor Routing Lab — 2026-08-29-08-11</title><style>{css}</style></head><body><main>{body}</main></body></html>'''
+          if '2026-08-29-08-11' not in html or 'Daily Multivendor Routing Lab' not in html:
+              raise SystemExit('Static HTML validation failed')
+          dst.write_text(html, encoding='utf-8')
+          print(f'Built plain static HTML: {len(html)} chars')
+      - name: Commit static HTML
         run: |
           if git diff --quiet -- docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html; then
             echo "No changes"
@@ -42,5 +56,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add docs/Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html
-          git commit -m "Replace routing lab wrapper with plain HTML"
+          git commit -m "Replace broken wrapper with plain static routing lab HTML"
           git push
