@@ -1,0 +1,39 @@
+name: Build Daily Multivendor Routing Lab 2026-08-30
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-routing-lab-2026-08-30.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build canonical plain interactive HTML
+        run: python .github/scripts/build_2026_08_30.py
+      - name: Validate and commit
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('docs/Daily_Multivendor_Routing_Lab_2026-08-30-07-59.html')
+          s=p.read_text(encoding='utf-8')
+          assert s.count('class="q"') == 50
+          assert s.count('Check Answer') == 50
+          assert s.count('class="lesson') >= 27
+          assert '2026-08-30-07-59' in s
+          for bad in ('DecompressionStream','const b=`','gzip.decompress','base64.b64decode'):
+              assert bad not in s
+          print('validated',p.stat().st_size)
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/Daily_Multivendor_Routing_Lab_2026-08-30-07-59.html
+          git commit -m "Add Daily Multivendor Routing Lab 2026-08-30-07-59"
+          git push
