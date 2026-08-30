@@ -16,8 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build canonical plain interactive HTML
-        run: python .github/scripts/build_2026_08_30.py
+      - name: Patch baseline marker and build canonical plain interactive HTML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/scripts/build_2026_08_30.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("marker='<section id=\"lessons\"><h2>Detailed Technical Lessons</h2>'", "marker='<h2>Detailed source lessons</h2>'")
+          p.write_text(s,encoding='utf-8')
+          PY
+          python .github/scripts/build_2026_08_30.py
       - name: Validate and commit
         run: |
           python - <<'PY'
@@ -28,6 +36,7 @@ jobs:
           assert s.count('Check Answer') == 50
           assert s.count('class="lesson') >= 27
           assert '2026-08-30-07-59' in s
+          assert 'Q-in-VNI: controlled Layer-2 extension' in s
           for bad in ('DecompressionStream','const b=`','gzip.decompress','base64.b64decode'):
               assert bad not in s
           print('validated',p.stat().st_size)
