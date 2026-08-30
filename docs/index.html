@@ -6,7 +6,7 @@
 <title>Daily Multivendor Routing Lab</title>
 <style>
 :root{--bg:#eef3f7;--card:#fff;--ink:#17212b;--muted:#617181;--line:#d7e0e8;--nav:#102a43;--accent:#0969a7;--soft:#eef7ff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.6}.wrap{max-width:1040px;margin:auto;padding:28px 18px}.hero{background:var(--nav);color:#fff;border-radius:18px;padding:34px}.hero h1{margin:0 0 8px}.hero p{margin:4px 0;color:#e7f0f7}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:24px;margin-top:18px}.badge{display:inline-block;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 9px;margin:2px;font-size:12px}.cta{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:9px;margin-top:10px}.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.item{background:var(--soft);border-radius:10px;padding:13px}.muted{color:var(--muted);font-size:14px}a{color:var(--accent)}@media(max-width:640px){.hero{padding:24px}.wrap{padding:14px}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.6}.wrap{max-width:1040px;margin:auto;padding:28px 18px}.hero{background:var(--nav);color:#fff;border-radius:18px;padding:34px}.hero h1{margin:0 0 8px}.hero p{margin:4px 0;color:#e7f0f7}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:24px;margin-top:18px}.cta{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:9px;margin-top:10px}.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.item{background:var(--soft);border-radius:10px;padding:13px}.muted{color:var(--muted);font-size:14px}a{color:var(--accent);overflow-wrap:anywhere}li{margin:7px 0}@media(max-width:640px){.hero{padding:24px}.wrap{padding:14px}}
 </style>
 </head>
 <body>
@@ -14,29 +14,36 @@
 <section class="hero">
 <h1>Daily Multivendor Routing Lab</h1>
 <p>Enterprise routing, switching, overlays, redistribution, and multivendor interoperability.</p>
-<p><b>Latest published run:</b> 2026-08-29-08-11</p>
+<p><b>Latest published run:</b> 2026-08-30-07-59</p>
 </section>
 
 <section class="card">
 <h2>What is covered today</h2>
-<p>Today's lab focuses on evidence-first troubleshooting across <b>Cisco, Fortinet, Palo Alto Networks, Arista, Aruba/HPE, Juniper, and FRRouting</b>. The workbook connects protocol theory to actual deployment behavior instead of treating each vendor as an isolated topic.</p>
-<div class="grid">
-<div class="item"><b>BGP / EVPN / VXLAN</b><br><span class="muted">VTEP next-hop recursion, EVPN multihoming, Type-2/3/5 routes, logical VTEPs, underlay versus overlay.</span></div>
-<div class="item"><b>Route Redistribution</b><br><span class="muted">OSPF↔BGP policy, route tags, route-map attachment points, loop prevention, RIB selection, and migration caveats.</span></div>
-<div class="item"><b>Fortinet SD-WAN</b><br><span class="muted">BGP multipath eligibility, installed next hops, SD-WAN steering, and forwarding-state verification.</span></div>
-<div class="item"><b>Multichassis & Layer 2</b><br><span class="muted">EVPN all-active, VSX/MLAG/vPC concepts, LACP, VLAN/trunk behavior, BUM and L2-over-L3 design.</span></div>
-<div class="item"><b>MPLS / IS-IS / Segment Routing</b><br><span class="muted">VRFs, label forwarding, IS-IS Level 2, FRR Segment Routing, capability and interoperability limits.</span></div>
-<div class="item"><b>50-question cumulative exam</b><br><span class="muted">Current material plus prior OSPF, BGP, EIGRP, RIP, IS-IS, MPLS, EVPN/VXLAN, SD-Access, RIB/FIB and troubleshooting concepts.</span></div>
-</div>
+<p>The latest workbook contains <b>27 source-derived lessons across Cisco, Fortinet, Palo Alto Networks, Arista, Aruba/HPE, Juniper and FRRouting</b>, including seven newly researched lessons plus cumulative material from prior runs.</p>
+<ul>
+<li><b>Cisco Q-in-VNI:</b> controlled Layer-2 extension across EVPN/VXLAN, provider S-VLAN to L2VNI mapping, preservation of inner customer tags, and platform restrictions that can fail even when EVPN is healthy.</li>
+<li><b>FortiOS 7.6.6 MP-BGP EVPN:</b> Route Type 2/3 endpoint learning, ARP suppression, BUM replication, and the critical separation between EVPN control-plane state and recursive VTEP reachability.</li>
+<li><b>PAN-OS Advanced Routing Engine:</b> prefix/access/route-map filter semantics, implicit behavior, peer versus peer-group precedence, and how to isolate redistribution versus outbound-advertisement failures.</li>
+<li><b>Arista EVPN Type-5 DCI:</b> route re-origination across domains, independent RD/RT policy and D-path provenance as a redistribution-style loop-prevention mechanism.</li>
+<li><b>Aruba/HPE VSX EVPN:</b> independent BGP control-plane identities represented by a common logical VTEP, plus selective synchronization and fields that must remain unique per peer.</li>
+<li><b>Juniper Type-2/Type-5 coexistence:</b> route preference, tenant-table installation and Packet Forwarding Engine next-hop scaling consequences.</li>
+<li><b>FRRouting EVPN:</b> separation between BGP EVPN correctness and Linux bridge/FDB/neighbor/kernel forwarding state.</li>
+<li><b>50-question cumulative exam:</b> interactive Check Answer controls, final grading and spaced repetition across OSPF, BGP, redistribution, MPLS/SR, EVPN/VXLAN, multichassis and RIB/FIB troubleshooting.</li>
+</ul>
 <p>
-<a class="cta" href="Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html">Open today's interactive HTML lab</a>
+<a class="cta" href="Daily_Multivendor_Routing_Lab_2026-08-30-07-59.html">Open today's interactive HTML lab</a>
 <a class="cta secondary" href="https://github.com/ccaiccie4/dailymultivendorlab">View repository</a>
 </p>
 </section>
 
 <section class="card">
+<h2>Recent reports</h2>
+<p><a href="Daily_Multivendor_Routing_Lab_2026-08-29-08-11.html">2026-08-29-08-11 — previous Daily Multivendor Routing Lab</a></p>
+</section>
+
+<section class="card">
 <h2>How to use the lab</h2>
-<p>Read the source-derived lessons first, follow the verification workflow and labs, then complete the cumulative exam. Each run is timestamped so retries and manual runs remain distinguishable.</p>
+<p>Read the source-derived lessons first, follow the verification workflow and reproducible labs, then complete the cumulative exam. Every report is plain interactive HTML published directly to GitHub Pages.</p>
 <p class="muted">GitHub Pages root: https://ccaiccie4.github.io/dailymultivendorlab/</p>
 </section>
 </div>
