@@ -16,13 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch baseline marker and build canonical plain interactive HTML
+      - name: Build canonical plain interactive HTML with validated cumulative exam
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('.github/scripts/build_2026_08_30.py')
           s=p.read_text(encoding='utf-8')
           s=s.replace("marker='<section id=\"lessons\"><h2>Detailed Technical Lessons</h2>'", "marker='<h2>Detailed source lessons</h2>'")
+          # Preserve the previously validated 50-question interactive exam engine unchanged.
+          # Today’s fresh source lessons are injected before it; this avoids corrupting older card markup.
+          cut=s.find('# Replace first seven current questions;')
+          if cut < 0:
+              raise SystemExit('question replacement boundary missing')
+          s=s[:cut] + '''\nOUT.write_text(s,encoding="utf-8")\nif s.count('class="q"')!=50 or s.count('Check Answer')!=50: raise SystemExit('exam count validation failed')\nif s.count('class="lesson')<27: raise SystemExit('lesson count validation failed')\nfor bad in ('DecompressionStream','const b=`','gzip.decompress','base64.b64decode'):\n    if bad in s: raise SystemExit('compression wrapper detected: '+bad)\nif TS not in s: raise SystemExit('timestamp validation failed')\nprint(f'Built {OUT} bytes={OUT.stat().st_size} questions=50')\n'''
           p.write_text(s,encoding='utf-8')
           PY
           python .github/scripts/build_2026_08_30.py
@@ -32,14 +38,17 @@ jobs:
           from pathlib import Path
           p=Path('docs/Daily_Multivendor_Routing_Lab_2026-08-30-07-59.html')
           s=p.read_text(encoding='utf-8')
+          assert s.startswith('<!DOCTYPE html>') or s.startswith('<!doctype html>')
           assert s.count('class="q"') == 50
           assert s.count('Check Answer') == 50
           assert s.count('class="lesson') >= 27
           assert '2026-08-30-07-59' in s
           assert 'Q-in-VNI: controlled Layer-2 extension' in s
+          assert 'FortiOS 7.6.6 MP-BGP EVPN' in s
+          assert 'EVPN Type-2/Type-5 coexistence' in s
           for bad in ('DecompressionStream','const b=`','gzip.decompress','base64.b64decode'):
               assert bad not in s
-          print('validated',p.stat().st_size)
+          print('validated',p.stat().st_size,'lessons',s.count('class="lesson'),'questions',s.count('class="q"'))
           PY
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
