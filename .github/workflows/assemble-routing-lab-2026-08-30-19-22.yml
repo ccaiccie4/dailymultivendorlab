@@ -1,36 +1,39 @@
-name: Assemble Daily Multivendor Routing Lab 2026-08-30-19-22
+name: Build beginner-first Daily Multivendor Routing Lab 2026-08-30-19-22
 on:
   push:
     paths:
-      - '.lab_chunks/2026-08-30-19-22/**'
+      - '.lab_build/rebuild_beginner_2026-08-30-19-22.py'
 permissions:
   contents: write
 jobs:
-  assemble:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Assemble canonical HTML when all chunks exist
+      - name: Rebuild from the same 18-59 source report
+        run: python .lab_build/rebuild_beginner_2026-08-30-19-22.py
+      - name: Validate canonical HTML
         shell: bash
         run: |
           set -euo pipefail
-          DIR=.lab_chunks/2026-08-30-19-22
           TARGET=docs/Daily_Multivendor_Routing_Lab_2026-08-30-19-22.html
-          COUNT=$(find "$DIR" -maxdepth 1 -type f -name 'part*.txt' 2>/dev/null | wc -l || true)
-          if [ "$COUNT" -ne 4 ]; then
-            echo "Waiting for all 4 chunks; currently have $COUNT"
-            exit 0
-          fi
-          cat "$DIR"/part01.txt "$DIR"/part02.txt "$DIR"/part03.txt "$DIR"/part04.txt > "$TARGET"
+          test -s "$TARGET"
           grep -q '2026-08-30-19-22' "$TARGET"
-          grep -q 'name="lesson-count" content="21"\|content="21" name="lesson-count"' "$TARGET"
-          grep -q 'name="question-count" content="50"\|content="50" name="question-count"' "$TARGET"
-          grep -q 'beginner-foundation-count' "$TARGET"
+          grep -Eq 'name="lesson-count" content="21"|content="21" name="lesson-count"' "$TARGET"
+          grep -Eq 'name="question-count" content="50"|content="50" name="question-count"' "$TARGET"
+          test "$(grep -o 'Beginner foundation — terms you need before this lesson' "$TARGET" | wc -l)" -eq 21
           grep -q 'function gradeAll' "$TARGET"
+          grep -q 'function resetExam' "$TARGET"
           grep -q 'Original image URL:' "$TARGET"
-          rm -rf "$DIR"
+          ! grep -qi 'gzip' "$TARGET"
+          ! grep -qi 'base64' "$TARGET"
+      - name: Publish generated report
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=docs/Daily_Multivendor_Routing_Lab_2026-08-30-19-22.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add "$TARGET" "$DIR"
+          git add "$TARGET"
           git commit -m 'Publish Daily Multivendor Routing Lab 2026-08-30-19-22' || exit 0
           git push
