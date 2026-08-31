@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.lab_build/rebuild_beginner_2026-08-30-19-22.py'
+      - '.github/workflows/assemble-routing-lab-2026-08-30-19-22.yml'
 permissions:
   contents: write
 jobs:
@@ -10,6 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Correct generic cumulative-exam selector
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.lab_build/rebuild_beginner_2026-08-30-19-22.py')
+          s=p.read_text()
+          old="""exam=s.find('<section class=\"card\"><h2>Cumulative 50-question exam</h2>')\nif exam<0: exam=s.find('<section class=\"card\"><h2>Cumulative exam</h2>')\nif exam<0: raise SystemExit('Exam section not found')"""
+          new="""em=re.search(r'<section class=\"card\"><h2>[^<]*Cumulative[^<]*</h2>',s,re.I)\nexam=em.start() if em else -1\nif exam<0: raise SystemExit('Exam section not found')"""
+          if old not in s:
+              raise SystemExit('Expected selector block not found in build script')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+          PY
       - name: Rebuild from the same 18-59 source report
         run: python .lab_build/rebuild_beginner_2026-08-30-19-22.py
       - name: Validate canonical HTML
