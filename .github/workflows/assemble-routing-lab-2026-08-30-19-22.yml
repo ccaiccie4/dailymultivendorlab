@@ -1,0 +1,36 @@
+name: Assemble Daily Multivendor Routing Lab 2026-08-30-19-22
+on:
+  push:
+    paths:
+      - '.lab_chunks/2026-08-30-19-22/**'
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble canonical HTML when all chunks exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIR=.lab_chunks/2026-08-30-19-22
+          TARGET=docs/Daily_Multivendor_Routing_Lab_2026-08-30-19-22.html
+          COUNT=$(find "$DIR" -maxdepth 1 -type f -name 'part*.txt' 2>/dev/null | wc -l || true)
+          if [ "$COUNT" -ne 4 ]; then
+            echo "Waiting for all 4 chunks; currently have $COUNT"
+            exit 0
+          fi
+          cat "$DIR"/part01.txt "$DIR"/part02.txt "$DIR"/part03.txt "$DIR"/part04.txt > "$TARGET"
+          grep -q '2026-08-30-19-22' "$TARGET"
+          grep -q 'name="lesson-count" content="21"\|content="21" name="lesson-count"' "$TARGET"
+          grep -q 'name="question-count" content="50"\|content="50" name="question-count"' "$TARGET"
+          grep -q 'beginner-foundation-count' "$TARGET"
+          grep -q 'function gradeAll' "$TARGET"
+          grep -q 'Original image URL:' "$TARGET"
+          rm -rf "$DIR"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$TARGET" "$DIR"
+          git commit -m 'Publish Daily Multivendor Routing Lab 2026-08-30-19-22' || exit 0
+          git push
