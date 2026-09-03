@@ -18,7 +18,9 @@ jobs:
           import base64, zlib, re
           ts='2026-09-03-08-02'
           p=Path('.lab_build')/ts
-          enc=''.join((p/f'z{i:02d}.txt').read_text().strip() for i in range(4))
+          names=['z00a.txt','z00b.txt','z01.txt','z02.txt','z03a.txt','z03b.txt']
+          enc=''.join((p/n).read_text().strip() for n in names)
+          assert len(enc)==50736, len(enc)
           html=zlib.decompress(base64.b64decode(enc)).decode('utf-8')
           assert f'<meta name="run-timestamp" content="{ts}">' in html
           assert html.count('<article class="lesson"') == 21
