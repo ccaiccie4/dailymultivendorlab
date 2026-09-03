@@ -1,0 +1,58 @@
+name: Assemble Routing Lab 2026-09-03-08-02
+on:
+  push:
+    paths:
+      - '.lab_build/2026-09-03-08-02/run.marker'
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble canonical workbook and update homepage
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, zlib, re
+          ts='2026-09-03-08-02'
+          p=Path('.lab_build')/ts
+          enc=''.join((p/f'z{i:02d}.txt').read_text().strip() for i in range(4))
+          html=zlib.decompress(base64.b64decode(enc)).decode('utf-8')
+          assert f'<meta name="run-timestamp" content="{ts}">' in html
+          assert html.count('<article class="lesson"') == 21
+          assert html.count('Beginner foundation — terms you need before this lesson') == 21
+          assert '<meta name="question-count" content="50">' in html
+          assert 'function gradeAll()' in html and 'Check Answer' in html
+          assert '30-Day Uniqueness Validation — PASS' in html
+          assert '<meta name="30-day-uniqueness" content="PASS">' in html
+          assert 'base64' not in html.lower()
+          assert 'gzip' not in html.lower()
+          assert 'fetch(' not in html
+          out=Path('docs')/f'Daily_Multivendor_Routing_Lab_{ts}.html'
+          out.write_text(html, encoding='utf-8')
+          idxp=Path('docs/index.html')
+          idx=idxp.read_text(encoding='utf-8')
+          idx=idx.replace('<b>Latest published run:</b> 2026-09-02-08-01','<b>Latest published run:</b> 2026-09-03-08-02',1)
+          card='''<section class="card"><h2>What is covered today — 2026-09-03-08-02</h2><p><b>30-Day Uniqueness Validation: PASS.</b> Ten prior production/rerun groups including older Gmail-only history were reviewed; 128 prior primary lesson/title fingerprints were inventoried; 17 candidate mechanisms were rejected as recent duplicates; repeated primary topics = 0; repeated primary source URLs = 0.</p><ul><li><b>Cisco:</b> EIGRP wide metrics, OSPFv3 prefix suppression, and BGP maximum-prefix/discard-extra route-scale containment.</li><li><b>Palo Alto Networks:</b> PIM Assert forwarder election, multicast RPF with separate mRIB/mFIB reasoning, and ECMP Symmetric Return.</li><li><b>Fortinet:</b> PIMv2 sparse/dense multicast and VRF support, RIP/RIPv2/RIPng behavior, and BGP route-flap dampening.</li><li><b>Arista:</b> BGP FlowSpec for DDoS controls, RPKI origin validation, and IS-IS overload-bit startup/maintenance behavior.</li><li><b>FRRouting:</b> BMP observability stages, VRRPv2/v3 on Linux, and NHRP spoke-to-spoke shortcuts.</li><li><b>Juniper:</b> TCP-AO for BGP/LDP, IS-IS prefix-export-limit with automatic overload, and OSPFv2 sham links over MPLS L3VPN.</li><li><b>Aruba/HPE:</b> PIM active-active on VSX, IGMP snooping, and MSTP region/CST/IST/VLAN mapping behavior.</li><li><b>Study design:</b> beginner-first primer plus 21 lesson-specific foundations, evidence-first state boundaries, multivendor normalization, and reproducible labs.</li><li><b>Cumulative exam:</b> exactly 50 interactive questions — 21 new-today plus 29 fresh spaced-repetition/integration scenarios — with Check Answer, detailed choice rationales, 80% PASS, and domain/vendor breakdown.</li></ul><p><a class="cta" href="Daily_Multivendor_Routing_Lab_2026-09-03-08-02.html">Open today's interactive HTML lab</a> <a class="cta secondary" href="https://github.com/ccaiccie4/dailymultivendorlab">View repository</a></p></section>'''
+          anchor='<section class="card"><h2>What is covered today — 2026-09-02-08-01</h2>'
+          if anchor in idx:
+              idx=idx.replace(anchor, card + '<section class="card"><h2>Previous report — 2026-09-02-08-01</h2>', 1)
+          else:
+              idx=re.sub(r'(</section>)(?=<section class="card">)', r'\1'+card, idx, count=1)
+          idxp.write_text(idx, encoding='utf-8')
+          print('Canonical bytes:', out.stat().st_size)
+          print('Lesson count:', html.count('<article class="lesson"'))
+          print('Beginner count:', html.count('Beginner foundation — terms you need before this lesson'))
+          print('Uniqueness PASS:', '30-Day Uniqueness Validation — PASS' in html)
+          PY
+      - name: Commit canonical report and homepage
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/Daily_Multivendor_Routing_Lab_2026-09-03-08-02.html docs/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Daily Multivendor Routing Lab 2026-09-03-08-02"
+          git push
