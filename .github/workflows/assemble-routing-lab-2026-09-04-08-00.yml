@@ -1,0 +1,39 @@
+name: Assemble Routing Lab 2026-09-04-08-00
+on:
+  push:
+    paths:
+      - '.lab_build/2026-09-04-08-00.ready'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble canonical HTML
+        run: |
+          cat .lab_build/2026-09-04-08-00.part-* | base64 -d | gzip -d > docs/Daily_Multivendor_Routing_Lab_2026-09-04-08-00.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('docs/Daily_Multivendor_Routing_Lab_2026-09-04-08-00.html')
+          t=p.read_text(encoding='utf-8')
+          assert 'run-timestamp" content="2026-09-04-08-00' in t
+          assert 'lesson-count" content="21' in t
+          assert 'beginner-foundation-count" content="21' in t
+          assert 'question-count" content="50' in t
+          assert '30-day-uniqueness" content="PASS' in t
+          assert t.count('Beginner foundation — terms you need before this lesson') == 21
+          assert 'function gradeAll()' in t
+          assert 'atob(' not in t.lower()
+          assert 'gzip' not in t.lower()
+          assert 'base64' not in t.lower()
+          print(p.stat().st_size)
+          PY
+      - name: Commit canonical report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/Daily_Multivendor_Routing_Lab_2026-09-04-08-00.html
+          git commit -m 'Daily Multivendor Routing Lab — 2026-09-04-08-00' || exit 0
+          git push
