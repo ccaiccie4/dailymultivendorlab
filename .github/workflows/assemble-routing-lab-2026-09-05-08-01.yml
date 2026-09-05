@@ -1,0 +1,45 @@
+name: Assemble Routing Lab 2026-09-05-08-01
+on:
+  push:
+    paths:
+      - '.lab_build/2026-09-05-08-01.ready'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble exact canonical HTML
+        run: |
+          cat .lab_build/2026-09-05-08-01.part-* | base64 -d | gzip -d > docs/Daily_Multivendor_Routing_Lab_2026-09-05-08-01.html
+          python - <<'PY'
+          from pathlib import Path
+          import re, json
+          p=Path('docs/Daily_Multivendor_Routing_Lab_2026-09-05-08-01.html')
+          t=p.read_text(encoding='utf-8')
+          assert p.stat().st_size == 87014, p.stat().st_size
+          assert 'run-timestamp" content="2026-09-05-08-01' in t
+          assert 'lesson-count" content="21' in t
+          assert 'beginner-foundation-count" content="21' in t
+          assert 'question-count" content="50' in t
+          assert '30-day-uniqueness" content="PASS' in t
+          assert 'unique-question-fingerprints" content="50/50' in t
+          assert 'repeated-stem-templates" content="0' in t
+          assert 'Question order Q1→Q50' in t
+          assert t.count('Beginner foundation — terms you need before this lesson') == 21
+          assert 'function gradeAll()' in t
+          assert 'shuffle(' not in t and 'Math.random' not in t
+          assert 'Which troubleshooting approach best matches this lesson' not in t
+          assert 'Verify the feature-specific state' not in t
+          assert 'atob(' not in t.lower() and 'gzip' not in t.lower() and 'base64' not in t.lower()
+          print('canonical validation PASS', p.stat().st_size)
+          PY
+      - name: Commit canonical report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/Daily_Multivendor_Routing_Lab_2026-09-05-08-01.html
+          git commit -m 'Daily Multivendor Routing Lab — 2026-09-05-08-01' || exit 0
+          git push
