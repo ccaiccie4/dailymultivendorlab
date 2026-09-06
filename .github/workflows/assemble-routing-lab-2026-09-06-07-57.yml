@@ -16,13 +16,23 @@ jobs:
         run: |
           sudo mkdir -p /mnt/data
           sudo chown "$USER" /mnt/data
-          cat .lab_build/2026-09-06-07-57.py.part-* > .lab_build/2026-09-06-07-57.build.py
+          python - <<'PY'
+          from pathlib import Path
+          base=Path('.lab_build')
+          parts=[]
+          parts.append((base/'2026-09-06-07-57.py.part-00').read_text(encoding='utf-8')[:15000])
+          parts.append((base/'2026-09-06-07-57.py.part-01').read_text(encoding='utf-8')[:15000])
+          for n in range(2,7):
+              parts.append((base/f'2026-09-06-07-57.py.part-{n:02d}').read_text(encoding='utf-8'))
+          script=''.join(parts)
+          assert len(script)==72507, len(script)
+          (base/'2026-09-06-07-57.build.py').write_text(script,encoding='utf-8')
+          PY
           python .lab_build/2026-09-06-07-57.build.py
       - name: Revalidate canonical workbook
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
           p=Path('docs/Daily_Multivendor_Routing_Lab_2026-09-06-07-57.html')
           t=p.read_text(encoding='utf-8')
           assert p.stat().st_size == 128441, p.stat().st_size
