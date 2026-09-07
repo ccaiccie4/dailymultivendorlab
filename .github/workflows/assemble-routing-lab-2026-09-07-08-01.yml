@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Assemble exact canonical HTML
         run: |
-          cat .lab_build/2026-09-07-08-01.part-* | base64 -d | gzip -d > docs/Daily_Multivendor_Routing_Lab_2026-09-07-08-01.html
+          cat .lab_build/2026-09-07-08-01.seg-* | base64 -d | gzip -d > docs/Daily_Multivendor_Routing_Lab_2026-09-07-08-01.html
           python - <<'PY'
           from pathlib import Path
           p=Path('docs/Daily_Multivendor_Routing_Lab_2026-09-07-08-01.html')
