@@ -13,14 +13,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Assemble exact canonical HTML
         run: |
-          cat .lab_build/2026-09-08-08-55.seg-* | base64 -d | gzip -d > docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html
           python - <<'PY'
           from pathlib import Path
-          import hashlib
+          import base64, gzip, hashlib
+          parts=sorted(Path('.lab_build').glob('2026-09-08-08-55.seg-*'))
+          assert len(parts)==2, parts
+          encoded=''.join(x.read_text(encoding='utf-8').strip() for x in parts)
+          raw=gzip.decompress(base64.b64decode(encoded, validate=True))
+          assert len(raw)==170669, len(raw)
+          assert hashlib.sha256(raw).hexdigest()=='63feff39ab563c4916e3818d24745fb98e1758ba185e58f8bdd615579eacc304'
           p=Path('docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html')
-          t=p.read_text(encoding='utf-8')
-          assert p.stat().st_size == 170669, p.stat().st_size
-          assert hashlib.sha256(p.read_bytes()).hexdigest() == '63feff39ab563c4916e3818d24745fb98e1758ba185e58f8bdd615579eacc304'
+          p.write_bytes(raw)
+          t=raw.decode('utf-8')
           assert 'run-timestamp" content="2026-09-08-08-55' in t
           assert 'lesson-count" content="21' in t
           assert 'beginner-foundation-count" content="21' in t
@@ -31,16 +35,16 @@ jobs:
           assert 'repeated-correct-answer-action-patterns" content="0' in t
           assert 'generic-troubleshooting-shell-questions" content="0' in t
           assert 'question-order" content="Q1-Q50' in t
-          assert t.count('Beginner foundation — terms you need before this lesson') == 21
+          assert t.count('Beginner foundation — terms you need before this lesson')==21
           assert 'function gradeAll()' in t
-          script=t.split('<script>')[-1].split('</script>')[0]
-          assert 'shuffle(' not in script and 'Math.random' not in script
+          main_script=t.split('<script>')[-1].split('</script>')[0]
+          assert 'shuffle(' not in main_script and 'Math.random' not in main_script
           assert 'Which troubleshooting approach best matches this lesson?' not in t
           assert 'Which observation should be checked first?' not in t
           assert 'Which state boundary failed?' not in t
           assert 'Verify the feature-specific state' not in t
           assert 'atob(' not in t.lower() and 'base64,' not in t.lower()
-          print('canonical validation PASS', p.stat().st_size)
+          print('canonical validation PASS',len(raw),hashlib.sha256(raw).hexdigest())
           PY
       - name: Commit canonical report and remove staging parts
         run: |
@@ -48,5 +52,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html
           git rm -f .lab_build/2026-09-08-08-55.seg-* .lab_build/2026-09-08-08-55.ready || true
-          git commit -m 'Daily Multivendor Routing Lab — 2026-09-08-08-55' || exit 0
+          git commit -m 'Daily Multivendor Routing Lab — 2026-09-08-08-55'
           git push
