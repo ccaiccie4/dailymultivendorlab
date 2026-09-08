@@ -1,0 +1,10 @@
+parts=[('2026-09-08-08-55.seg-00', 19999), ('2026-09-08-08-55.seg-01', 4940)]
+encoded_len=24939
+ERROR=Error('Incorrect padding')
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "/usr/lib/python3.12/base64.py", line 88, in b64decode
+    return binascii.a2b_base64(s, strict_mode=validate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+binascii.Error: Incorrect padding
+
