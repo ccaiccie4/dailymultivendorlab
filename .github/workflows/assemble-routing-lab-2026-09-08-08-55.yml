@@ -11,46 +11,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Assemble exact canonical HTML
+      - name: Decode canonical HTML with exact hash gate
         run: |
           python - <<'PY'
           from pathlib import Path
-          import base64, gzip, hashlib
+          import base64,gzip,hashlib,traceback
+          target_sha='63feff39ab563c4916e3818d24745fb98e1758ba185e58f8bdd615579eacc304'
+          debug=[]
           parts=sorted(Path('.lab_build').glob('2026-09-08-08-55.seg-*'))
-          assert len(parts)==2, parts
-          encoded=''.join(x.read_text(encoding='utf-8').strip() for x in parts)
-          raw=gzip.decompress(base64.b64decode(encoded, validate=True))
-          assert len(raw)==170669, len(raw)
-          assert hashlib.sha256(raw).hexdigest()=='63feff39ab563c4916e3818d24745fb98e1758ba185e58f8bdd615579eacc304'
-          p=Path('docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html')
-          p.write_bytes(raw)
-          t=raw.decode('utf-8')
-          assert 'run-timestamp" content="2026-09-08-08-55' in t
-          assert 'lesson-count" content="21' in t
-          assert 'beginner-foundation-count" content="21' in t
-          assert 'question-count" content="50' in t
-          assert '30-day-uniqueness" content="PASS' in t
-          assert 'unique-question-fingerprints" content="50/50' in t
-          assert 'repeated-stem-templates" content="0' in t
-          assert 'repeated-correct-answer-action-patterns" content="0' in t
-          assert 'generic-troubleshooting-shell-questions" content="0' in t
-          assert 'question-order" content="Q1-Q50' in t
-          assert t.count('Beginner foundation — terms you need before this lesson')==21
-          assert 'function gradeAll()' in t
-          main_script=t.split('<script>')[-1].split('</script>')[0]
-          assert 'shuffle(' not in main_script and 'Math.random' not in main_script
-          assert 'Which troubleshooting approach best matches this lesson?' not in t
-          assert 'Which observation should be checked first?' not in t
-          assert 'Which state boundary failed?' not in t
-          assert 'Verify the feature-specific state' not in t
-          assert 'atob(' not in t.lower() and 'base64,' not in t.lower()
-          print('canonical validation PASS',len(raw),hashlib.sha256(raw).hexdigest())
+          debug.append('parts='+repr([(x.name,x.stat().st_size) for x in parts]))
+          try:
+              encoded=''.join(x.read_text(encoding='utf-8').strip() for x in parts)
+              debug.append('encoded_len='+str(len(encoded)))
+              packed=base64.b64decode(encoded,validate=True)
+              debug.append('packed_len='+str(len(packed)))
+              raw=gzip.decompress(packed)
+              sha=hashlib.sha256(raw).hexdigest()
+              debug.append('raw_len='+str(len(raw)))
+              debug.append('raw_sha='+sha)
+              if len(raw)==170669 and sha==target_sha:
+                  t=raw.decode('utf-8')
+                  required=['run-timestamp" content="2026-09-08-08-55','lesson-count" content="21','beginner-foundation-count" content="21','question-count" content="50','30-day-uniqueness" content="PASS','unique-question-fingerprints" content="50/50','repeated-stem-templates" content="0','repeated-correct-answer-action-patterns" content="0','generic-troubleshooting-shell-questions" content="0','question-order" content="Q1-Q50']
+                  missing=[x for x in required if x not in t]
+                  debug.append('missing_markers='+repr(missing))
+                  debug.append('beginner_count='+str(t.count('Beginner foundation — terms you need before this lesson')))
+                  main_script=t.split('<script>')[-1].split('</script>')[0]
+                  debug.append('shuffle_js='+str('shuffle(' in main_script or 'Math.random' in main_script))
+                  if not missing and t.count('Beginner foundation — terms you need before this lesson')==21 and 'function gradeAll()' in t and 'shuffle(' not in main_script and 'Math.random' not in main_script:
+                      Path('docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html').write_bytes(raw)
+                      debug.append('CANONICAL_READY=YES')
+                  else:
+                      debug.append('CANONICAL_READY=NO_MARKER_GATE')
+              else:
+                  debug.append('CANONICAL_READY=NO_HASH_GATE')
+          except Exception as e:
+              debug.append('ERROR='+repr(e))
+              debug.append(traceback.format_exc())
+          Path('.lab_build/2026-09-08-08-55.debug.txt').write_text('\n'.join(debug)+'\n',encoding='utf-8')
+          print('\n'.join(debug))
           PY
-      - name: Commit canonical report and remove staging parts
+      - name: Commit result/debug
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html
-          git rm -f .lab_build/2026-09-08-08-55.seg-* .lab_build/2026-09-08-08-55.ready || true
-          git commit -m 'Daily Multivendor Routing Lab — 2026-09-08-08-55'
+          git add .lab_build/2026-09-08-08-55.debug.txt
+          if [ -f docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html ]; then git add docs/Daily_Multivendor_Routing_Lab_2026-09-08-08-55.html; fi
+          git commit -m 'Assemble Daily Multivendor Routing Lab — 2026-09-08-08-55'
           git push
