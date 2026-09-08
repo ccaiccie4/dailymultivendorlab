@@ -29,7 +29,7 @@ jobs:
           assert 'unique-question-fingerprints" content="50/50' in t
           assert 'repeated-stem-templates" content="0' in t
           assert 'repeated-correct-answer-action-patterns" content="0' in t
-          assert 'generic-troubleshooting-shells" content="0' in t
+          assert 'generic-troubleshooting-shell-questions" content="0' in t
           assert 'question-order" content="Q1-Q50' in t
           assert t.count('Beginner foundation — terms you need before this lesson') == 21
           assert 'function gradeAll()' in t
