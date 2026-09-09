@@ -1,0 +1,55 @@
+name: Assemble Routing Lab 2026-09-09-08-03
+on:
+  push:
+    paths:
+      - '.lab_build/2026-09-09-08-03.ready'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and validate exact canonical HTML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64,gzip,hashlib,re,json
+          prefix='2026-09-09-08-03'
+          target_sha='c8e250a8d1a2b4f6b65e3a2b3c9047b8fe333ebcabdf2a5d5129d46c30a829d5'
+          parts=[Path('.lab_build/'+prefix+'.seg-00'),Path('.lab_build/'+prefix+'.seg-01'),Path('.lab_build/'+prefix+'.seg-02')]
+          assert [p.stat().st_size for p in parts]==[9851,9851,19702], [p.stat().st_size for p in parts]
+          encoded=''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          assert len(encoded)==39404, len(encoded)
+          raw=gzip.decompress(base64.b64decode(encoded,validate=True))
+          assert len(raw)==116583, len(raw)
+          assert hashlib.sha256(raw).hexdigest()==target_sha, hashlib.sha256(raw).hexdigest()
+          t=raw.decode('utf-8')
+          required=['run-timestamp\" content=\"2026-09-09-08-03','lesson-count\" content=\"21','beginner-foundation-count\" content=\"21','question-count\" content=\"50','30-day-uniqueness\" content=\"PASS','unique-question-fingerprints\" content=\"50/50','repeated-stem-templates\" content=\"0','repeated-correct-answer-action-patterns\" content=\"0','generic-troubleshooting-shell-questions\" content=\"0','question-order\" content=\"Q1-Q50','function gradeAll()','function resetExam()']
+          missing=[x for x in required if x not in t]
+          assert not missing, missing
+          assert t.count('<article class="lesson"')==21
+          assert t.count('Beginner foundation — terms you need before this lesson')==21
+          assert 'Math.random' not in t and 'shuffle(' not in t
+          assert 'atob(' not in t and 'gzip.decompress' not in t
+          qm=re.search(r'const DATA=(\[.*?\]); const checked=',t,re.S)
+          assert qm
+          Q=json.loads(qm.group(1))
+          assert len(Q)==50
+          assert [q['id'] for q in Q]==list(range(1,51))
+          assert len({q['fingerprint'] for q in Q})==50
+          assert len({q['mechanism_fingerprint'] for q in Q})==50
+          Path('docs/Daily_Multivendor_Routing_Lab_2026-09-09-08-03.html').write_bytes(raw)
+          print('CANONICAL_READY=YES')
+          print('sha256='+target_sha)
+          print('lessons=21 beginner=21 questions=50 fingerprints=50 mechanisms=50 order=PASS shuffle=0')
+          PY
+      - name: Commit canonical report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/Daily_Multivendor_Routing_Lab_2026-09-09-08-03.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Assemble canonical Daily Multivendor Routing Lab — 2026-09-09-08-03'
+          git push
