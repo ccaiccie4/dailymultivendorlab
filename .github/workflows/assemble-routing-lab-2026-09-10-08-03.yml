@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.lab_build/2026-09-10-08-03.ready'
+      - '.lab_build/2026-09-10-08-03.retry'
   workflow_dispatch:
 permissions:
   contents: write
@@ -19,8 +20,11 @@ jobs:
           prefix='2026-09-10-08-03'
           target_sha='d25f1458e813147b6640d9b001155f7841a07e22dcbffe6548baf5c19726fcb4'
           parts=[Path('.lab_build/'+prefix+f'.seg-{i:02d}') for i in range(4)]
-          assert [p.stat().st_size for p in parts]==[9286,9286,9286,9286], [p.stat().st_size for p in parts]
-          encoded=''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          assert [p.stat().st_size for p in parts]==[9287,9286,9286,9286], [p.stat().st_size for p in parts]
+          seg0=parts[0].read_text(encoding='utf-8').strip()
+          assert 'WkOmqRmRJK' in seg0, 'expected single staged transfer typo not found'
+          seg0=seg0.replace('WkOmqRmRJK','WkOmqmRJK',1)
+          encoded=seg0+''.join(p.read_text(encoding='utf-8').strip() for p in parts[1:])
           assert len(encoded)==37144, len(encoded)
           raw=gzip.decompress(base64.b64decode(encoded,validate=True))
           assert len(raw)==116110, len(raw)
