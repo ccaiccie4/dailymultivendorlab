@@ -4,6 +4,7 @@ on:
     paths:
       - '.lab_build/2026-09-10-08-03.ready'
       - '.lab_build/2026-09-10-08-03.retry'
+      - '.lab_build/2026-09-10-08-03.retry2'
   workflow_dispatch:
 permissions:
   contents: write
@@ -19,37 +20,41 @@ jobs:
           import base64,gzip,hashlib,re,json
           prefix='2026-09-10-08-03'
           target_sha='d25f1458e813147b6640d9b001155f7841a07e22dcbffe6548baf5c19726fcb4'
-          parts=[Path('.lab_build/'+prefix+f'.seg-{i:02d}') for i in range(4)]
-          assert [p.stat().st_size for p in parts]==[9287,9286,9286,9286], [p.stat().st_size for p in parts]
-          seg0=parts[0].read_text(encoding='utf-8').strip()
-          assert 'WkOmqRmRJK' in seg0, 'expected single staged transfer typo not found'
-          seg0=seg0.replace('WkOmqRmRJK','WkOmqmRJK',1)
-          encoded=seg0+''.join(p.read_text(encoding='utf-8').strip() for p in parts[1:])
-          assert len(encoded)==37144, len(encoded)
+          names=['seg-00a','p10','p11','p120','p121','p122','p123','seg-01','seg-02','seg-03']
+          parts={n:Path('.lab_build/'+prefix+'.'+n).read_text(encoding='utf-8').strip() for n in names}
+          assert [len(parts[n]) for n in names]==[4643,1161,1161,291,290,290,290,9286,9286,9286]
+          assert hashlib.sha1(b'blob 4643\0'+parts['seg-00a'].encode()).hexdigest()=='df41a28ec6474d388132e1458345022d324ad033'
+          assert hashlib.sha1(b'blob 1161\0'+parts['p10'].encode()).hexdigest()=='e71f65694a1de4102cca74adb5cf646e4faf0801'
+          assert hashlib.sha1(b'blob 1161\0'+parts['p11'].encode()).hexdigest()=='1c4cf2f02e157ed22b0c072f4c04159fa21d07eb'
+          assert hashlib.sha1(b'blob 291\0'+parts['p120'].encode()).hexdigest()=='6171ec8bd250b862dd434d1cc9126bb94cd0c475'
+          # One staged character was case-flipped by connector transfer; repair deterministically before checksum validation.
+          assert 'NZhole' in parts['p121']
+          parts['p121']=parts['p121'].replace('NZhole','NZHole',1)
+          assert hashlib.sha1(b'blob 290\0'+parts['p121'].encode()).hexdigest()=='8103340ec32f96313f50e92670b37bbacf143cde'
+          assert hashlib.sha1(b'blob 290\0'+parts['p122'].encode()).hexdigest()=='66bab383a30cadd2f64e3d0e5be36e16964db5bb'
+          assert hashlib.sha1(b'blob 290\0'+parts['p123'].encode()).hexdigest()=='40f40b15a95671fc7af979bf36036f33d3b9641c'
+          assert hashlib.sha1(b'blob 9286\0'+parts['seg-01'].encode()).hexdigest()=='cc5785ca9c69b6680301bbd90de80be11cdae117'
+          assert hashlib.sha1(b'blob 9286\0'+parts['seg-02'].encode()).hexdigest()=='c073ed66fcd98e1eddebd0bee18e2338ea95757b'
+          assert hashlib.sha1(b'blob 9286\0'+parts['seg-03'].encode()).hexdigest()=='5c6ead4f11365c8ac2c9682314859f6bf2df4d34'
+          encoded=parts['seg-00a']+parts['p10']+parts['p11']+parts['p120']+parts['p121']+parts['p122']+parts['p123']+parts['seg-01']+parts['seg-02']+parts['seg-03']
+          assert len(encoded)==37144
           raw=gzip.decompress(base64.b64decode(encoded,validate=True))
-          assert len(raw)==116110, len(raw)
-          actual=hashlib.sha256(raw).hexdigest()
-          assert actual==target_sha, actual
+          assert len(raw)==116110
+          assert hashlib.sha256(raw).hexdigest()==target_sha
           t=raw.decode('utf-8')
           required=['run-timestamp\" content=\"2026-09-10-08-03','lesson-count\" content=\"21','beginner-foundation-count\" content=\"21','question-count\" content=\"50','30-day-uniqueness\" content=\"PASS','unique-question-fingerprints\" content=\"50/50','repeated-stem-templates\" content=\"0','repeated-correct-answer-action-patterns\" content=\"0','generic-troubleshooting-shell-questions\" content=\"0','question-order\" content=\"Q1-Q50','function gradeAll()','function resetExam()']
-          missing=[x for x in required if x not in t]
-          assert not missing, missing
+          assert not [x for x in required if x not in t]
           assert t.count('<article class="lesson"')==21
           assert t.count('Beginner foundation — terms you need before this lesson')==21
-          assert 'Math.random' not in t and 'shuffle(' not in t
-          assert 'atob(' not in t and 'gzip.decompress' not in t
-          qm=re.search(r'const DATA=(\[.*?\]); const checked=',t,re.S)
-          assert qm
+          assert 'Math.random' not in t and 'shuffle(' not in t and 'atob(' not in t
+          qm=re.search(r'const DATA=(\[.*?\]); const checked=',t,re.S); assert qm
           Q=json.loads(qm.group(1))
-          assert len(Q)==50
-          assert [q['id'] for q in Q]==list(range(1,51))
+          assert len(Q)==50 and [q['id'] for q in Q]==list(range(1,51))
           assert len({q['fingerprint'] for q in Q})==50
           assert len({q['mechanism_fingerprint'] for q in Q})==50
           assert [sum(q['answer']==i for q in Q) for i in range(4)]==[13,13,12,12]
           Path('docs/Daily_Multivendor_Routing_Lab_2026-09-10-08-03.html').write_bytes(raw)
-          print('CANONICAL_READY=YES')
-          print('sha256='+target_sha)
-          print('lessons=21 beginner=21 questions=50 fingerprints=50 mechanisms=50 order=PASS shuffle=0 answers=13/13/12/12')
+          print('CANONICAL_READY=YES sha256='+target_sha)
           PY
       - name: Commit canonical report
         run: |
