@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="run-timestamp" content="2026-09-11-07-58"><meta name="lesson-count" content="21"><meta name="beginner-foundation-count" content="21"><meta name="question-count" content="50">
+<meta name="30-day-uniqueness" content="PASS"><meta name="question-order" content="Q1-Q50"><meta name="unique-question-fingerprints" content="50/50">
+<meta name="repeated-stem-templates" content="0"><meta name="repeated-correct-answer-action-patterns" content="0"><meta name="generic-troubleshooting-shell-questions" content="0">
+<title>Daily Multivendor Routing Lab — 2026-09-11-07-58</title><style>
+:root{--bg:#edf2f6;--ink:#17212b;--nav:#102a43;--a:#0969a7;--line:#d6e0e8;--good:#e9f8ed;--bad:#fff0f0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.62 Arial,sans-serif}
+main{max-width:1280px;margin:auto;padding:18px}.hero{background:var(--nav);color:white;padding:30px;border-radius:18px}
+.card,.lesson,.q,.term,.figure{background:#fff;border:1px solid var(--line);border-radius:13px;padding:18px;margin:14px 0;overflow-wrap:anywhere}
+h1,h2,h3{line-height:1.25}h3{color:#204f6e}a{color:var(--a);word-break:break-word}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px}.metric{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px}.metric b{display:block;font-size:20px}
+table{width:100%;border-collapse:collapse;background:#fff}th,td{border:1px solid var(--line);padding:8px;vertical-align:top}.badge{display:inline-block;background:#e8f1f7;padding:3px 8px;border-radius:999px;margin:2px;font-size:12px}
+.figure{background:#fff!important;border-style:dashed}.q label{display:block;margin:7px 0}.feedback{display:none;padding:11px;border-radius:8px}.good{background:var(--good)}.bad{background:var(--bad)}
+button{background:var(--a);color:white;border:0;border-radius:7px;padding:8px 12px;margin:5px;cursor:pointer}.score{font-size:22px;font-weight:bold}code{background:#f3f6f8;padding:1px 4px;border-radius:4px}
+@media(max-width:700px){main{padding:7px}table{display:block;overflow:auto}}@media print{body,.card,.lesson,.q,.term,.figure{background:#fff!important}button{display:none}}
+</style></head><body><main>
+<section class="hero"><h1>Daily Multivendor Routing Lab — 2026-09-11-07-58</h1><p><b>21 fresh primary lessons · all seven vendor groups · exactly 50 fixed-order questions.</b></p>
+<p>Today's rotation emphasizes ORF/update generation, OSPF LSA churn control, BGP update-group isolation, RIP redistribution precedence, IGMP membership aging, PAN-OS graceful-restart timer interaction, FortiGate origination/link/RIB preference controls, Arista LLGR and dynamic peer policy, FRR restart/shutdown semantics, Junos TCP-AO/remote-next-hop/attribute-set mechanics, and AOS-CX route-source/BGP update behavior.</p></section>
+<section class="card"><nav><a href="#uniq">30-day validation</a> · <a href="#examvalid">Exam validation</a> · <a href="#primer">Primer</a> · <a href="#matrix">Matrix</a> · <a href="#lessons">Lessons</a> · <a href="#compare">Comparisons</a> · <a href="#exam">Exam</a> · <a href="#sources">Sources</a></nav></section>
+<section id="uniq" class="card"><h2>30-Day Uniqueness Validation — PASS</h2><div class="metrics">
+<div class="metric"><b>16</b>published reports checked</div><div class="metric"><b>37</b>candidate mechanisms rejected</div><div class="metric"><b>21</b>accepted fresh lessons</div>
+<div class="metric"><b>0</b>repeated primary topics</div><div class="metric"><b>0</b>repeated source URLs</div><div class="metric"><b>0</b>repeated scenario fingerprints</div></div>
+<p>The exclusion pass used every published Daily Multivendor Routing Lab report currently present in the repository from 2026-08-29 through 2026-09-10, including yesterday's 21 primary les
